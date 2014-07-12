@@ -13,6 +13,10 @@
 #include <stdio.h>  
 #include <errno.h>  
 #include <iostream>
+
+
+#include <cstring>
+
 using namespace std; 
 #define MAX_EVENTS 500
 struct myevent_s  
@@ -54,9 +58,9 @@ void EventAdd(int epollFd, int events, myevent_s *ev)
         ev->status = 1;  
     }  
     if(epoll_ctl(epollFd, op, ev->fd, &epv) < 0)  
-        printf("Event Add failed[fd=%d]/n", ev->fd);  
+        printf("Event Add failed[fd=%d]\n", ev->fd);  
     else  
-        printf("Event Add OK[fd=%d]/n", ev->fd);  
+        printf("Event Add OK[fd=%d]\n", ev->fd);  
 }  
 // delete an event from epoll  
 void EventDel(int epollFd, myevent_s *ev)  
@@ -105,7 +109,7 @@ void AcceptConn(int fd, int events, void *arg)
         // add a read event for receive data  
         EventSet(&g_Events[i], nfd, RecvData, &g_Events[i]);  
         EventAdd(g_epollFd, EPOLLIN|EPOLLET, &g_Events[i]);  
-        printf("new conn[%s:%d][time:%d]/n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port), g_Events[i].last_active);  
+        printf("new conn[%s:%d][time:%ld]\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port), g_Events[i].last_active);  
     }while(0);  
 }  
 // receive data  
@@ -120,7 +124,7 @@ void RecvData(int fd, int events, void *arg)
     {  
         ev->len = len;  
         ev->buff[len] = '\0';  
-        printf("C[%d]:%s/n", fd, ev->buff);  
+        printf("C[%d]:%s\n", fd, ev->buff);  
         // change to send event  
         EventSet(ev, fd, SendData, ev);  
         EventAdd(g_epollFd, EPOLLOUT|EPOLLET, ev);  
@@ -128,12 +132,12 @@ void RecvData(int fd, int events, void *arg)
     else if(len == 0)  
     {  
         close(ev->fd);  
-        printf("[fd=%d] closed gracefully./n", fd);  
+        printf("[fd=%d] closed gracefully.\n", fd);  
     }  
     else  
     {  
         close(ev->fd);  
-        printf("recv[fd=%d] error[%d]:%s/n", fd, errno, strerror(errno));  
+        fprintf(stderr,"recv[fd=%d] error[%d]\n", fd, errno);  
     }  
 }  
 // send data  
@@ -154,14 +158,14 @@ void SendData(int fd, int events, void *arg)
     else  
     {  
         close(ev->fd);  
-        printf("recv[fd=%d] error[%d]/n", fd, errno);  
+        printf("recv[fd=%d] error[%d]\n", fd, errno);  
     }  
 }  
 void InitListenSocket(int epollFd, short port)  
 {  
     int listenFd = socket(AF_INET, SOCK_STREAM, 0);  
     fcntl(listenFd, F_SETFL, O_NONBLOCK); // set non-blocking  
-    printf("server listen fd=%d/n", listenFd);  
+    printf("server listen fd=%d\n", listenFd);  
     EventSet(&g_Events[MAX_EVENTS], listenFd, AcceptConn, &g_Events[MAX_EVENTS]);  
     // add listen socket  
     EventAdd(epollFd, EPOLLIN|EPOLLET, &g_Events[MAX_EVENTS]);  
@@ -183,12 +187,12 @@ int main(int argc, char **argv)
     }  
     // create epoll  
     g_epollFd = epoll_create(MAX_EVENTS);  
-    if(g_epollFd <= 0) printf("create epoll failed.%d/n", g_epollFd);  
+    if(g_epollFd <= 0) printf("create epoll failed.%d\n", g_epollFd);  
     // create & bind listen socket, and add to epoll, set non-blocking  
     InitListenSocket(g_epollFd, port);  
     // event loop  
     struct epoll_event events[MAX_EVENTS];  
-    printf("server running:port[%d]/n", port);  
+    printf("server running:port[%d]\n", port);  
     int checkPos = 0;  
     while(1){  
         // a simple timeout check here, every time 100, better to use a mini-heap, and add timer event  
@@ -201,14 +205,14 @@ int main(int argc, char **argv)
             if(duration >= 60) // 60s timeout  
             {  
                 close(g_Events[checkPos].fd);  
-                printf("[fd=%d] timeout[%d--%d]./n", g_Events[checkPos].fd, g_Events[checkPos].last_active, now);  
+                printf("[fd=%d] timeout[%ld--%ld].\n", g_Events[checkPos].fd, g_Events[checkPos].last_active, now);  
                 EventDel(g_epollFd, &g_Events[checkPos]);  
             }  
         }  
         // wait for events to happen  
         int fds = epoll_wait(g_epollFd, events, MAX_EVENTS, 1000);  
         if(fds < 0){  
-            printf("epoll_wait error, exit/n");  
+            printf("epoll_wait error, exit\n");  
             break;  
         }  
         for(int i = 0; i < fds; i++){  
