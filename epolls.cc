@@ -12,9 +12,9 @@
 #include <unistd.h>  
 #include <stdio.h>  
 #include <errno.h>  
-#include <iostream>  
-using namespace std;  
-#define MAX_EVENTS 500  
+#include <iostream>
+using namespace std; 
+#define MAX_EVENTS 500
 struct myevent_s  
 {  
     int fd;  
@@ -25,7 +25,10 @@ struct myevent_s
     char buff[128]; // recv data buffer  
     int len;  
     long last_active; // last active time  
-};  
+};
+
+
+
 // set event  
 void EventSet(myevent_s *ev, int fd, void (*call_back)(int, int, void*), void *arg)  
 {  
@@ -116,7 +119,7 @@ void RecvData(int fd, int events, void *arg)
     if(len > 0)  
     {  
         ev->len = len;  
-        ev->buff[len] = '/0';  
+        ev->buff[len] = '\0';  
         printf("C[%d]:%s/n", fd, ev->buff);  
         // change to send event  
         EventSet(ev, fd, SendData, ev);  
@@ -164,7 +167,8 @@ void InitListenSocket(int epollFd, short port)
     EventAdd(epollFd, EPOLLIN|EPOLLET, &g_Events[MAX_EVENTS]);  
     // bind & listen  
     sockaddr_in sin;  
-    bzero(&sin, sizeof(sin));  
+    //bzero(&sin, sizeof(sin));  
+    memset(&sin,0,sizeof(sin));
     sin.sin_family = AF_INET;  
     sin.sin_addr.s_addr = INADDR_ANY;  
     sin.sin_port = htons(port);  
