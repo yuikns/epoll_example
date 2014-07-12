@@ -5,15 +5,27 @@ LDFLAGS= -levent
 OBJECTS=$(SOURCES:.cc=.o)
 DEL=rm -rf
 
-SOURCES= epolls.cc epollc.cc
-EXECUTABLE=epolls epollc
 
+SOURCES= epolls.cc epollc.cc
+EXECS=epolls
+EXECC=epollc
+
+
+OBJS=epolls.o
+OBJC=epollc.o
+
+
+EXECUTABLE:= ${EXECS} ${EXECC}
 
 .PHONY: all clean
 all: $(SOURCES) $(EXECUTABLE)
 	
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+$(EXECS): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
+
+$(EXECC): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJC) -o $@
+
 
 .cc.o:
 	$(CC)  -c $(CFLAGS) $< -o $@
@@ -21,7 +33,8 @@ $(EXECUTABLE): $(OBJECTS)
 
 clean:
 	-${DEL} *.o	
-	-${DEL} ${EXECUTABLE}
+	-${DEL} ${EXECS} ${EXECC}
+
 
 
 
