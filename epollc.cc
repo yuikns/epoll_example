@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	their_addr.sin_family = AF_INET; // host byte order
 	their_addr.sin_port = htons(atoi(argv[2])); // short, network byte order
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-	memset(their_addr.sin_zero, '', sizeof their_addr.sin_zero);
+	memset(their_addr.sin_zero,0, sizeof their_addr.sin_zero);
 
 	if (connect(sockfd, (struct sockaddr *)&their_addr, sizeof their_addr) == -1) 
 	{
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		buf[numbytes] = '';
+		buf[numbytes] = 0;
 
 		printf("Received: %s \n",buf);
 		sleep(1);
