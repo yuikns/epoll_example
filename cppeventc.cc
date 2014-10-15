@@ -51,7 +51,8 @@ int main(int c, char **v)
         printf("connected .... \n");
     }
 
-    for(;;){
+    //for(;;)
+    {
         char query[1024];
         printf("send query : ");
         scanf("%s",query);
@@ -74,12 +75,13 @@ int main(int c, char **v)
           remaining -= n_written;
           cp += n_written;
         }
-
+        printf(" try receive ... \n");
         /* Get an answer back. */
-        while (1) {
+        //while (1) 
+        {
             ssize_t result = recv(fd, buf, sizeof(buf), 0);
             if (result <= 0) {
-                break;
+                //break;
             } else if (result < 0) {
                 perror("recv");
                 close(fd);
@@ -87,6 +89,8 @@ int main(int c, char **v)
             }
             fwrite(buf, 1, result, stdout);
         }
+        printf("\n");
+        //printf("restart w&r loop ... \n");
     }
     close(fd);
     return 0;
