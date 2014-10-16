@@ -4,3 +4,10 @@
 *~
 
 
+*.o
+
+eventc
+events
+events_c
+
+

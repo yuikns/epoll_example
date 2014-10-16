@@ -95,8 +95,8 @@ void do_read(evutil_socket_t fd, short events, void *arg)
 				state->buffer[state->buffer_used++] = rot13_char(buf[i]);
 			if (buf[i] == '\n') {
 				assert(state->write_event);
-				char mbuf[20] = "zzzzzzz";
-				ssize_t r_sz = send(fd,mbuf,sizeof(mbuf),0);
+				//char mbuf[20] = "zzzzzzz";
+				//ssize_t r_sz = send(fd,mbuf,sizeof(mbuf),0);
 
 				event_add(state->write_event, NULL);
 				state->write_upto = state->buffer_used;
@@ -121,8 +121,8 @@ void do_write(evutil_socket_t fd, short events, void *arg)
 	struct fd_state *state = (struct fd_state *)arg;
 
 	while (state->n_written < state->write_upto) {
-		char mbuf[20] = "cccccccc";
-		ssize_t r_sz = send(fd,mbuf,sizeof(mbuf),0);
+		//char mbuf[20] = "cccccccc";
+		//ssize_t r_sz = send(fd,mbuf,sizeof(mbuf),0);
 
 		ssize_t result = send(fd, state->buffer + state->n_written,
 							  state->write_upto - state->n_written, 0);

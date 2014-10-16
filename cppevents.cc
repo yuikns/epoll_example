@@ -23,7 +23,7 @@
 
 #define MAX_LINE 16384
 
-namespace argcvse{
+namespace acvse{
 namespace rpc{
 
 
@@ -290,7 +290,7 @@ void run(void)
 int main(int argc, char *argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0);
-	argcvse::rpc::run();
+	acvse::rpc::run();
 	return 0;
 }
 
