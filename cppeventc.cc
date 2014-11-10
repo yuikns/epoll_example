@@ -9,10 +9,20 @@
 #include <string.h>
 #include <stdio.h>
 
-int main(int c, char **v)
+#include <stdlib.h> // atoi
+
+int main(int argc, char *argv[])
 {
-    const char hostname[] = "localhost";
+    const char * hostname = "localhost";
+    if(argc > 1 )
+    {
+        hostname = argv[1];
+    }
     int port = 9527;
+    if(argc > 2)
+    {
+        port = atoi(argv[2]);
+    }
     struct sockaddr_in sin;
     struct hostent *h;
     const char *cp;

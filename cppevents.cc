@@ -33,19 +33,19 @@ class Queue{
 public:
 	Queue(){}
 	~Queue(){}
-	// void push(const T& t)  { std::lock_guard l(m_mutex); m_queue.push(t); }
-	// void pop()             { std::lock_guard l(m_mutex); m_queue.pop(); }
-	// bool empty()           { std::lock_guard l(m_mutex); return m_queue.empty(); }
+	void push(const T& t)  { std::lock_guard<std::mutex> l(m_mutex); m_queue.push(t); }
+	void pop()             { std::lock_guard<std::mutex> l(m_mutex); m_queue.pop(); }
+    bool empty()           { std::lock_guard<std::mutex> l(m_mutex); return m_queue.empty(); }
 
-	// T& front()             { std::lock_guard l(m_mutex); return m_queue.front(); }
-	// const T& front() const { std::lock_guard l(m_mutex); return m_queue.front(); }
+	T& front()             { std::lock_guard<std::mutex> l(m_mutex); return m_queue.front(); }
+	const T& front() const { std::lock_guard<std::mutex> l(m_mutex); return m_queue.front(); }
 
-	void push(const T& t)  { m_queue.push(t); }
-	void pop()             { m_queue.pop(); }
-	bool empty()           { return m_queue.empty(); }
+	// void push(const T& t)  { m_queue.push(t); }
+	// void pop()             { m_queue.pop(); }
+	// bool empty()           { return m_queue.empty(); }
 
-	T& front()             { return m_queue.front(); }
-	const T& front() const { return m_queue.front(); }
+	// T& front()             { return m_queue.front(); }
+	// const T& front() const { return m_queue.front(); }
 
 private:
 	std::queue<T> m_queue;
