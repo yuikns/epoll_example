@@ -79,7 +79,7 @@ class RpcState
 
 RpcState::RpcState(struct event_base *base, evutil_socket_t & fd)
 {
-	fprintf(stdout, "RpcState start\n");
+	//fprintf(stdout, "RpcState start\n");
 	sflag = true;
 	if (!(r_evn = event_new(base, fd, EV_READ|EV_PERSIST, do_read,this)))
 	{
@@ -93,12 +93,12 @@ RpcState::RpcState(struct event_base *base, evutil_socket_t & fd)
 		return;
 	}
 	m_fd = fd;
-	fprintf(stdout, "RpcState end\n");
+	//fprintf(stdout, "RpcState end\n");
 }
 
 RpcState::~RpcState()
 {
-	printf("~RpcState start\n");
+	//printf("~RpcState start\n");
 	if(sflag)
 	{
 		event_free(r_evn);
@@ -106,13 +106,13 @@ RpcState::~RpcState()
 
 		close(m_fd);
 	}
-	printf("~RpcState end\n");
+	//printf("~RpcState end\n");
 }
 
 
 void do_read(evutil_socket_t fd, short events, void * _state)
 {
-	printf("do_read start\n");
+	//printf("do_read start\n");
 
 	if ( _state == NULL)
 	{
@@ -127,19 +127,20 @@ void do_read(evutil_socket_t fd, short events, void * _state)
 
 	while(true)
 	{
-		printf ("(%d)fd : %d \n",__LINE__,fd);
+		//printf ("(%d)fd : %d \n",__LINE__,fd);
 		r_sz = recv(fd, buf, MAX_LINE , 0);
 		if (r_sz <= 0 )
 			break;
-		printf("GET(%d) : %s ",(int)r_sz,buf);
+		printf("GET(%d) \n",(int)r_sz);
+		state.buf += "HTTP/1.1 200 OK\r\n";
 		for(int i = 0 ; i < r_sz ; i ++)
 		{
-			if ( buf[i] == '\n')
+			if ( buf[i] == '\n' || buf[i] == '\r')
 			{
 				if (state.buf.length() > 0 )
 				{
-					printf("plus : %s \n",state.buf.c_str());
-					state.wq.push(state.buf);
+					printf("[done] %s \n",state.buf.c_str());
+					state.wq.push(state.buf + "\r\n\r\n");
 					state.buf.clear();
 					//char mbuf[20] = "vvvvvv";
 					//printf ("(%d)fd : %d \n",__LINE__,fd);
@@ -149,7 +150,12 @@ void do_read(evutil_socket_t fd, short events, void * _state)
 				}
 			} else 
 			{
-				state.buf += (char)(buf[i] + 1);
+				if((buf[i] >='A' && buf[i] <= 'Z') || (buf[i] >='a' && buf[i] <='z') || (buf[i] >='0' && buf[i] <='9'))
+					putchar((char)buf[i]);
+				else
+					putchar('.');
+				//state.buf += (char)(buf[i] + 1);
+				state.buf += i % 2 ? 'b':'s';
 			}
 		}
 	}
@@ -166,16 +172,16 @@ void do_read(evutil_socket_t fd, short events, void * _state)
 		delete &state;
 	}
 
-	printf("do_read end\n");
+	//printf("do_read end\n");
 }
 
 void do_write(evutil_socket_t fd, short events,void * _state)
 {
-	printf("do_write start\n");
+	//printf("do_write start\n");
 
 	if ( _state == NULL)
 	{
-		fprintf(stderr, "[ERR] do_write , not a right state\n");
+		//fprintf(stderr, "[ERR] do_write , not a right state\n");
 		return ;
 	}
 
@@ -187,12 +193,12 @@ void do_write(evutil_socket_t fd, short events,void * _state)
 		state.wq.pop();
 		//for( int z =0 ; z < 10 ; z ++ )
 		{
-			fprintf(stdout,"[W](%lu) [%s]",buf.length(),buf.c_str());
+			//fprintf(stdout,"[W](%lu) [%s]",buf.length(),buf.c_str());
 			//char mbuf[20] = "cccccccc";
 			ssize_t r_sz = send(fd,buf.data(),sizeof(char) * buf.length(),0);
 			//printf ("(%d)fd : %d \n",__LINE__,fd);
 			//ssize_t r_sz = send(fd,mbuf,sizeof(mbuf),0);
-			printf("[W sz] %lu\n", r_sz);
+			//printf("[W sz] %lu\n", r_sz);
 			if( r_sz < 0 )
 			{
 				if (errno == EAGAIN ) // XXX use evutil macro
@@ -203,13 +209,13 @@ void do_write(evutil_socket_t fd, short events,void * _state)
 	}
 
 	event_del(state.w_evn);
-	printf("do_write end\n");
+	//printf("do_write end\n");
 
 }
 
 void do_accept(evutil_socket_t listener, short event, void *arg)
 {
-	printf("do_accept start\n");
+	//printf("do_accept start\n");
 	struct event_base *base = (struct event_base *)arg;
 	struct sockaddr_storage ss;
 	socklen_t slen = sizeof(ss);
@@ -221,7 +227,7 @@ void do_accept(evutil_socket_t listener, short event, void *arg)
 		printf("XXX replace all closes with EVUTIL_CLOSESOCKET\n");
 		close(fd); // XXX replace all closes with EVUTIL_CLOSESOCKET */
 	} else {
-		printf("new visit start\n");
+		//printf("new visit start\n");
 		evutil_make_socket_nonblocking(fd);
 		printf ("(%d)fd : %d \n",__LINE__,fd);
 		RpcState & state = * (new RpcState(base, fd));
@@ -234,9 +240,9 @@ void do_accept(evutil_socket_t listener, short event, void *arg)
 			fprintf(stderr,"state sflag is false ... \n");
 		}
 
-		printf("new visit end\n");
+		//printf("new visit end\n");
 	}
-	printf("do_accept end\n");
+	//printf("do_accept end\n");
 }
 
 void run(void)
@@ -253,7 +259,7 @@ void run(void)
 
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = 0;
-	sin.sin_port = htons(9527);
+	sin.sin_port = htons(8080);
 
 	listener = socket(AF_INET, SOCK_STREAM, 0);
 	evutil_make_socket_nonblocking(listener);
@@ -280,7 +286,7 @@ void run(void)
 	event_add(listener_event, NULL);
 
 	event_base_dispatch(base);
-	printf("run end\n");
+	//printf("run end\n");
 }
 
 
