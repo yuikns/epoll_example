@@ -21,7 +21,8 @@
 #include <queue>
 
 
-#define MAX_LINE 16384
+// #define MAX_LINE 16384
+#define MAX_LINE 3
 
 namespace acvse{
 namespace rpc{
@@ -129,16 +130,19 @@ void do_read(evutil_socket_t fd, short events, void * _state)
 	{
 		printf ("(%d)fd : %d \n",__LINE__,fd);
 		r_sz = recv(fd, buf, MAX_LINE , 0);
-		if (r_sz <= 0 )
+		if (r_sz <= 0 ){
+            printf("BREAK : %d\n",__LINE__);
 			break;
+        }
 		printf("GET(%d) : %s ",(int)r_sz,buf);
 		for(int i = 0 ; i < r_sz ; i ++)
 		{
-			if ( buf[i] == '\n')
+			if ( buf[i] == EOF )
 			{
+                printf("EOF\n");
 				if (state.buf.length() > 0 )
 				{
-					printf("plus : %s \n",state.buf.c_str());
+					//printf("plus : %s \n",state.buf.c_str());
 					state.wq.push(state.buf);
 					state.buf.clear();
 					//char mbuf[20] = "vvvvvv";
@@ -147,9 +151,13 @@ void do_read(evutil_socket_t fd, short events, void * _state)
 					assert(state.w_evn);
 					event_add(state.w_evn,NULL);
 				}
+                break;
 			} else 
 			{
-				state.buf += (char)(buf[i] + 1);
+                printf("%c => %c \n",buf[i],
+                                    (buf[i] == '\n' ? '\n' : (char)(buf[i] + 1)));
+				//state.buf += buf[i] == '\n' ? '\n' : (char)(buf[i] + 1);
+				state.buf += buf[i] == '\n' ? '\n' : (char)(buf[i]);
 			}
 		}
 	}
@@ -189,6 +197,7 @@ void do_write(evutil_socket_t fd, short events,void * _state)
 		{
 			fprintf(stdout,"[W](%lu) [%s]",buf.length(),buf.c_str());
 			//char mbuf[20] = "cccccccc";
+            buf += EOF;
 			ssize_t r_sz = send(fd,buf.data(),sizeof(char) * buf.length(),0);
 			//printf ("(%d)fd : %d \n",__LINE__,fd);
 			//ssize_t r_sz = send(fd,mbuf,sizeof(mbuf),0);
@@ -219,7 +228,7 @@ void do_accept(evutil_socket_t listener, short event, void *arg)
 		perror("accept");
 	} else if (fd > FD_SETSIZE) {
 		printf("XXX replace all closes with EVUTIL_CLOSESOCKET\n");
-		close(fd); // XXX replace all closes with EVUTIL_CLOSESOCKET */
+		close(fd); // XXX replace all closes with EVUTIL_CLOSESOCKET
 	} else {
 		printf("new visit start\n");
 		evutil_make_socket_nonblocking(fd);

@@ -11,6 +11,9 @@
 
 #include <stdlib.h> // atoi
 
+#include <string>
+
+
 int main(int argc, char *argv[])
 {
     const char * hostname = "localhost";
@@ -27,8 +30,9 @@ int main(int argc, char *argv[])
     struct hostent *h;
     const char *cp;
     int fd;
-    ssize_t n_written, remaining;
-    char buf[1024];
+    ssize_t n_written;
+    //ssize_t remaining;
+    //char buf[1024];
 
     /* Look up the IP address for the hostname.   Watch out; this isn't
        threadsafe on most platforms. */
@@ -63,42 +67,63 @@ int main(int argc, char *argv[])
 
     //for(;;)
     {
-        char query[1024];
+        //char query[1024];
+        std::string query;
+        
+        char buf[102400];
         printf("send query : ");
-        scanf("%s",query);
-        printf("query : %s ...\n",query);
-        size_t l = strlen(query);
-        if(query[l - 1] != '\n'){
-            query[l] = '\n';
-            query[l+1] = '\0';
+        FILE *fr = fopen("eventc","r+");
+        while(fgets(buf,102400,fr) != NULL ) {
+            if(strncmp(buf,"ok",2) == 0 ){
+                break;
+            }else{
+                query.append(buf);
+                //printf("query : %s ...\n",query.c_str());
+            }
         }
+        fclose(fr);
+        size_t l = query.length();
+        //if(query[l - 1] != '\n'){
+        //    query[l] = '\n';
+        //    query[l+1] = '\0';
+        //}
         /* Write the query. */
         /* XXX Can send succeed partially? */
-        cp = query;
-        remaining = strlen(query);
-        while (remaining) {
-          n_written = send(fd, cp, remaining, 0);
+        cp = (query + (char)EOF).c_str();
+        //remaining = l + 1 ;
+        //while (remaining) {
+          n_written = send(fd, cp, l + 1 , 0);
+          printf("send : %d of all : %lu \n",(int)n_written,l+1);
           if (n_written <= 0) {
             perror("send");
-            return 1;
+            return -1;
           }
-          remaining -= n_written;
-          cp += n_written;
-        }
+          //remaining -= n_written;
+        //cp += n_written;
+        ///}
         printf(" try receive ... \n");
         /* Get an answer back. */
-        //while (1) 
+        FILE * f = fopen("rece_file.bin","w");
+        while (1) 
         {
             ssize_t result = recv(fd, buf, sizeof(buf), 0);
-            if (result <= 0) {
-                //break;
-            } else if (result < 0) {
+            if (result < 0) {
                 perror("recv");
                 close(fd);
                 return 1;
             }
-            fwrite(buf, 1, result, stdout);
+            if (buf[result-1] == EOF) {
+                //fwrite(buf, 1, result - 1, stdout);
+                fwrite(buf, 1, result - 1, f);
+                printf("## normal stop %d\n",__LINE__);
+                break;
+            }else{
+                //fwrite(buf, 1, result, stdout);
+                fwrite(buf, 1, result, f);
+            }
         }
+        fflush(f);
+        fclose(f);
         printf("\n");
         //printf("restart w&r loop ... \n");
     }
